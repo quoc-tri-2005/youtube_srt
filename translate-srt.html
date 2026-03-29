@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tạo Prompt Dịch</title>
+  <link rel="stylesheet" href="translate.css">
+</head>
+
+<body>
+
+<!-- 🔙 quay về -->
+<a href="index.html" class="back-btn">⬅ Quay về</a>
+
+<h1>Tạo prompt dịch phụ đề</h1>
+
+<p id="info">Chưa có dữ liệu</p>
+
+<textarea id="input" placeholder="Dán SRT gốc..."></textarea>
+
+<div class="actions">
+  <button onclick="generate()">Tạo prompt</button>
+  <button onclick="copyResult()">Copy</button>
+</div>
+
+<div id="output"></div>
+
+<script src="translate.js"></script>
+
+<script>
+// 🔥 copy nhanh
+function copyResult() {
+  const output = document.getElementById("output");
+  output.select();
+  document.execCommand("copy");
+}
+
+// 🔥 hiển thị số lượng prompt
+function updateInfo(count) {
+  document.getElementById("info").innerText = `Đã tạo ${count} prompt`;
+}
+</script>
+
+</body>
+</html>

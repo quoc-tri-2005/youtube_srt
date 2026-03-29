@@ -1,0 +1,27 @@
+body {
+  font-family: Arial;
+  padding: 20px;
+}
+
+/* 2 ô input */
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 4px;
+  bottom: 5px;
+}
+
+/* tất cả textarea */
+input {
+  width: 100%;
+  height: 220px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* ô kết quả full width */
+#result {
+  width: 100%;
+  height: 270px;
+}
