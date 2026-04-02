@@ -75,7 +75,7 @@ ${item.text}`
 
         div.innerHTML = `
   <div class="prompt-actions">
-    <b>PROMPT ${i + 1}</b>
+    <b>PROMPT ${i + 1} (${start} → ${end})</b>
     
     <div>
       <button class="copy-btn">Copy</button>
