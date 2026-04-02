@@ -60,6 +60,8 @@ function generate() {
     container.innerHTML = "";
 
     chunks.forEach((c, i) => {
+    const start = c[0]?.index;
+    const end = c[c.length - 1]?.index;
         const content = c.map(item =>
             `${item.index}
 ${item.time}
