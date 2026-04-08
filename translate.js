@@ -97,37 +97,34 @@ ${item.text}`
         const status = div.querySelector(".status");
 
         // COPY
-        btnCopy.onclick = async () => {
-            try {
-                await navigator.clipboard.writeText(textarea.value);
-                status.textContent = "📋 Đã copy";
-                status.style.color = "blue";
-            } catch {
-                status.textContent = "❌ Copy lỗi";
-                status.style.color = "red";
-            }
+btnCopy.onclick = async () => {
+    try {
+        await navigator.clipboard.writeText(textarea.value);
+        status.textContent = "📋 Đã copy";
+        status.style.color = "blue";
+    } catch {
+        status.textContent = "❌ Copy lỗi";
+        status.style.color = "red";
+    }
+};
 
-            setTimeout(() => status.textContent = "", 2000);
-        };
+// OK
+btnOK.onclick = () => {
+    status.textContent = "✅ Dịch OK";
+    status.style.color = "green";
 
-        // OK
-        btnOK.onclick = () => {
-            status.textContent = "✅ Dịch OK";
-            status.style.color = "green";
+    btnOK.classList.add("active");
+    btnFail.classList.remove("active");
+};
 
-            // optional: highlight nút
-            btnOK.classList.add("active");
-            btnFail.classList.remove("active");
-        };
+// FAIL
+btnFail.onclick = () => {
+    status.textContent = "❌ Dịch lỗi";
+    status.style.color = "red";
 
-        // FAIL
-        btnFail.onclick = () => {
-            status.textContent = "❌ Dịch lỗi";
-            status.style.color = "red";
-
-            btnFail.classList.add("active");
-            btnOK.classList.remove("active");
-        };
+    btnFail.classList.add("active");
+    btnOK.classList.remove("active");
+};
 
         container.appendChild(div);
     });
