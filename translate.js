@@ -28,25 +28,58 @@ function chunk(arr, size = 150) {
 
 // 🔥 TEMPLATE PROMPT CHUẨN
 function buildPrompt(content) {
-    return `Bạn là công cụ dịch phụ đề SRT cực kỳ chính xác.
-Nhiệm vụ:
-Dịch toàn bộ nội dung thoại sang tiếng Việt.
+    return `Bạn là công cụ dịch phụ đề SRT tuyệt đối chính xác theo cấu trúc gốc.
 
-QUY TẮC BẮT BUỘC (KHÔNG ĐƯỢC VI PHẠM):
-GIỮ NGUYÊN 100% số thứ tự subtitle (index).
-XÓA TOÀN BỘ timestamp (dòng chứa "-->").
-MỖI index CHỈ có DUY NHẤT 1 dòng dịch tương ứng.
-KHÔNG gộp nhiều subtitle thành một.
-KHÔNG tách một subtitle thành nhiều dòng.
-KHÔNG bỏ sót bất kỳ index nào.
-KHÔNG thêm bất kỳ nội dung nào ngoài bản dịch.
-SỐ LƯỢNG index trong output PHẢI BẰNG input.
-GIỮ NGUYÊN thứ tự các index.
-ĐỊNH DẠNG OUTPUT:
+MỤC TIÊU ƯU TIÊN CAO NHẤT:
+GIỮ NGUYÊN SỐ LƯỢNG SUBTITLE VÀ CẤU TRÚC INDEX.
+Độ tự nhiên của câu văn KHÔNG quan trọng bằng việc giữ đúng cấu trúc.
+
+QUY TẮC BẮT BUỘC:
+
+* GIỮ NGUYÊN toàn bộ index.
+* XÓA toàn bộ timestamp.
+* MỖI index chỉ được phép xuất hiện DUY NHẤT 1 dòng dịch.
+* KHÔNG được gộp 2 index.
+* KHÔNG được chia nhỏ 1 index.
+* KHÔNG được viết câu hoàn chỉnh bằng cách nối subtitle trước/sau.
+* KHÔNG được bỏ sót bất kỳ index nào.
+* OUTPUT phải có số index bằng EXACTLY input.
+* Mỗi subtitle phải dịch độc lập, coi như không liên quan subtitle kế tiếp.
+
+QUAN TRỌNG:
+Nếu subtitle gốc chỉ là cụm ngắn, từ ngắn hoặc câu chưa hoàn chỉnh thì bản dịch cũng phải giữ dạng ngắn/chưa hoàn chỉnh tương ứng.
+
+Ví dụ:
+
+Input:
+1553
+白天要处理工
+
+1554
+地的事情
+
+Output đúng:
+1553
+Ban ngày phải xử lý công
+
+1554
+Việc ở công trường
+
+KHÔNG được dịch thành:
+1553
+Ban ngày phải xử lý việc ở công trường
+
+Vì như vậy là đã GỘP NGHĨA của 2 subtitle.
+
+FORMAT BẮT BUỘC:
+
 [index]
-[nội dung đã dịch]
+[dịch đúng 1 dòng]
+
+Không thêm bất kỳ nội dung nào ngoài bản dịch.
 
 Bây giờ hãy dịch:
+
 
 ${content}`;
 }
