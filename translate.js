@@ -87,7 +87,7 @@ ${content}`;
 function generate() {
     const input = document.getElementById("input").value;
     const data = parseSRT(input);
-    const chunks = chunk(data, 150);
+    const chunks = chunk(data, 100);
 
     const container = document.getElementById("output");
     container.innerHTML = "";
