@@ -18,7 +18,7 @@ function parseSRT(srt) {
 }
 
 // chia chunk 150
-function chunk(arr, size = 150) {
+function chunk(arr, size = 100) {
     const result = [];
     for (let i = 0; i < arr.length; i += size) {
         result.push(arr.slice(i, i + size));
