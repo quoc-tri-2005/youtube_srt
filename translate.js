@@ -17,8 +17,8 @@ function parseSRT(srt) {
         });
 }
 
-// chia chunk 150
-function chunk(arr, size = 150) {
+// chia chunk 100
+function chunk(arr, size = 100) {
     const result = [];
     for (let i = 0; i < arr.length; i += size) {
         result.push(arr.slice(i, i + size));
@@ -167,7 +167,7 @@ ${content}`;
 function generate() {
     const input = document.getElementById("input").value;
     const data = parseSRT(input);
-    const chunks = chunk(data, 150);
+    const chunks = chunk(data, 100);
 
     const container = document.getElementById("output");
     container.innerHTML = "";
