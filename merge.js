@@ -15,13 +15,13 @@ function parseSRT(srt) {
 function getTranslatedTexts(srt) {
     const lines = srt
         .split("\n")
-        .map(l => l.trim())
-        .filter(l => l);
+        .map(line => line.trim());
 
     const result = [];
     let temp = [];
 
     for (const line of lines) {
+
         if (/^\d+$/.test(line)) {
             if (temp.length) {
                 result.push(temp.join("\n"));
@@ -34,7 +34,9 @@ function getTranslatedTexts(srt) {
             continue;
         }
 
-        temp.push(line);
+        if (line !== "") {
+            temp.push(line);
+        }
     }
 
     if (temp.length) {
@@ -44,58 +46,64 @@ function getTranslatedTexts(srt) {
     return result;
 }
 
-function timeToMs(time) {
-    const [h, m, rest] = time.split(":");
+function timeToMs(timeStr) {
+    const [h, m, rest] = timeStr.split(":");
     const [s, ms] = rest.split(",");
 
     return (
-        parseInt(h) * 3600000 +
-        parseInt(m) * 60000 +
-        parseInt(s) * 1000 +
-        parseInt(ms)
+        Number(h) * 3600000 +
+        Number(m) * 60000 +
+        Number(s) * 1000 +
+        Number(ms)
     );
 }
 
-function checkSRT(items) {
-    const errors = [];
+function msToTime(ms) {
+    const h = Math.floor(ms / 3600000);
+    ms %= 3600000;
 
-    for (let i = 0; i < items.length; i++) {
-        const [start, end] = items[i].time.split(" --> ");
+    const m = Math.floor(ms / 60000);
+    ms %= 60000;
 
-        const startMs = timeToMs(start);
-        const endMs = timeToMs(end);
+    const s = Math.floor(ms / 1000);
+    ms %= 1000;
 
-        const duration = endMs - startMs;
+    return (
+        String(h).padStart(2, "0") + ":" +
+        String(m).padStart(2, "0") + ":" +
+        String(s).padStart(2, "0") + "," +
+        String(ms).padStart(3, "0")
+    );
+}
 
-        if (duration < 1000) {
-            errors.push(
-                `Dòng ${items[i].index}: thời lượng chỉ ${duration}ms`
-            );
-        }
+function fixOverlap(items) {
 
-        if (i < items.length - 1) {
-            const nextStart = items[i + 1].time.split(" --> ")[0];
-            const nextStartMs = timeToMs(nextStart);
+    for (let i = 0; i < items.length - 1; i++) {
 
-            if (endMs === nextStartMs) {
-                errors.push(
-                    `Dòng ${items[i].index} và ${items[i + 1].index}: thời gian trùng nhau`
+        const [, currentEnd] =
+            items[i].time.split(" --> ");
+
+        const [nextStart, nextEnd] =
+            items[i + 1].time.split(" --> ");
+
+        if (currentEnd === nextStart) {
+
+            const newStart =
+                msToTime(
+                    timeToMs(nextStart) + 1
                 );
-            }
 
-            if (endMs > nextStartMs) {
-                errors.push(
-                    `Dòng ${items[i].index} và ${items[i + 1].index}: bị chồng thời gian`
-                );
-            }
+            items[i + 1].time =
+                `${newStart} --> ${nextEnd}`;
         }
     }
 
-    return errors;
+    return items;
 }
 
 function merge() {
-    const original = parseSRT(
+
+    let original = parseSRT(
         document.getElementById("original").value
     );
 
@@ -103,19 +111,14 @@ function merge() {
         document.getElementById("translated").value
     );
 
-    const errors = checkSRT(original);
-
-    if (errors.length) {
-        alert(
-            "Phát hiện lỗi SRT:\n\n" +
-            errors.join("\n")
-        );
-    }
+    original = fixOverlap(original);
 
     const result = original.map((item, i) => {
+
         return `${item.index}
 ${item.time}
 ${translated[i] || ""}`;
+
     }).join("\n\n");
 
     document.getElementById("result").value = result;
