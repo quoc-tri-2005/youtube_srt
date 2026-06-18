@@ -1,3 +1,6 @@
+```javascript
+const MAX_LINE_LENGTH = 32;
+
 function parseSRT(srt) {
     return srt
         .trim()
@@ -6,27 +9,29 @@ function parseSRT(srt) {
             const lines = block.trim().split("\n");
 
             return {
-                index: lines[0],
-                time: lines[1]
+                index: lines[0].trim(),
+                time: lines[1].trim()
             };
         });
 }
 
 function getTranslatedTexts(srt) {
-    const lines = srt
-        .split("\n")
-        .map(line => line.trim());
 
+    const lines = srt.split("\n");
     const result = [];
-    let temp = [];
+    let current = [];
 
-    for (const line of lines) {
+    for (const rawLine of lines) {
+
+        const line = rawLine.trim();
 
         if (/^\d+$/.test(line)) {
-            if (temp.length) {
-                result.push(temp.join("\n"));
-                temp = [];
+
+            if (current.length) {
+                result.push(current.join(" "));
+                current = [];
             }
+
             continue;
         }
 
@@ -34,19 +39,54 @@ function getTranslatedTexts(srt) {
             continue;
         }
 
-        if (line !== "") {
-            temp.push(line);
+        if (line) {
+            current.push(line);
         }
     }
 
-    if (temp.length) {
-        result.push(temp.join("\n"));
+    if (current.length) {
+        result.push(current.join(" "));
     }
 
     return result;
 }
 
+function wrapText(text, maxLen = MAX_LINE_LENGTH) {
+
+    const words = text.trim().split(/\s+/);
+
+    let lines = [];
+    let currentLine = "";
+
+    for (const word of words) {
+
+        if (!currentLine) {
+            currentLine = word;
+            continue;
+        }
+
+        const testLine = currentLine + " " + word;
+
+        if (testLine.length <= maxLen) {
+
+            currentLine = testLine;
+
+        } else {
+
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+
+    return lines.join("\n");
+}
+
 function timeToMs(timeStr) {
+
     const [h, m, rest] = timeStr.split(":");
     const [s, ms] = rest.split(",");
 
@@ -59,6 +99,7 @@ function timeToMs(timeStr) {
 }
 
 function msToTime(ms) {
+
     const h = Math.floor(ms / 3600000);
     ms %= 3600000;
 
@@ -115,11 +156,19 @@ function merge() {
 
     const result = original.map((item, i) => {
 
+        const text =
+            wrapText(
+                translated[i] || "",
+                MAX_LINE_LENGTH
+            );
+
         return `${item.index}
 ${item.time}
-${translated[i] || ""}`;
+${text}`;
 
     }).join("\n\n");
 
-    document.getElementById("result").value = result;
+    document.getElementById("result").value =
+        result;
 }
+```
