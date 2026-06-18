@@ -1,4 +1,4 @@
-```javascript
+
 const MAX_LINE_LENGTH = 32;
 
 function parseSRT(srt) {
@@ -171,4 +171,3 @@ ${text}`;
     document.getElementById("result").value =
         result;
 }
-```
