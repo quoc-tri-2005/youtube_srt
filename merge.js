@@ -8,54 +8,86 @@
    Parse SRT gốc
 ============================================ */
 
-function parseOriginalSRT(srt) {
+function parseTranslatedSRT(srt) {
+
+    const map = new Map();
+    const duplicates = [];
+    const invalid = [];
 
     if (!srt.trim()) {
-        return [];
-    }
 
-    const result = [];
+        return {
+            map,
+            duplicates,
+            invalid
+        };
+
+    }
 
     const blocks =
         srt
+            .replace(/\r/g, "")
             .trim()
-            .split(/\r?\n\r?\n+/);
+            .split(/\n{2,}/);
 
     for (const block of blocks) {
 
         const lines =
             block
-                .trim()
-                .split(/\r?\n/);
+                .split("\n")
+                .map(v => v.trim())
+                .filter(v => v !== "");
 
-        if (lines.length < 3)
+        if (lines.length < 2)
             continue;
 
         const index =
-            lines[0].trim();
-
-        const time =
-            lines[1].trim();
+            lines[0];
 
         const text =
             lines
-                .slice(2)
-                .join("\n")
-                .trim();
+                .slice(1)
+                .join("\n");
 
-        result.push({
+        if (!/^\d+$/.test(index)) {
 
+            invalid.push({
+                index,
+                text
+            });
+
+            continue;
+
+        }
+
+        if (map.has(index)) {
+
+            duplicates.push({
+                index,
+                old: map.get(index),
+                current: text
+            });
+
+            continue;
+
+        }
+
+        map.set(
             index,
-
-            time,
-
             text
-
-        });
+        );
 
     }
 
-    return result;
+    return {
+
+        map,
+
+        duplicates,
+
+        invalid
+
+    };
 
 }
 
