@@ -71,10 +71,25 @@ function parseOriginalSRT(srt) {
    }
 
 ============================================ */
-const originalIndexes = new Set(
-    original.map(item => item.index)
-);
-parseTranslatedSRT(
+
+const original =
+    parseOriginalSRT(
+        document.getElementById("original").value
+    );
+
+const originalIndexes =
+    new Set(
+        original.map(
+            item => item.index
+        )
+    );
+
+const translated =
+    parseTranslatedSRT(
+        document.getElementById("translated").value,
+        originalIndexes
+    );
+function parseTranslatedSRT(
     srt,
     originalIndexes
 ){
