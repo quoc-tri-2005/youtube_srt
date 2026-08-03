@@ -1,216 +1,283 @@
-/* =====================================================
+/* =========================================
    merge.js
-   PHẦN 1
-   Utilities + Parse + Report
-===================================================== */
+   SRT MERGE TOOL
+========================================= */
 
-/* ============================================
-   Parse SRT gốc
-============================================ */
+
+/* =========================================
+   PARSE FILE GỐC
+========================================= */
 
 function parseOriginalSRT(srt) {
 
+    const result = [];
+
     if (!srt.trim()) {
-        return [];
+        return result;
     }
 
-    const result = [];
 
     const blocks =
         srt
-            .trim()
-            .split(/\r?\n\r?\n+/);
+        .replace(/\r/g, "")
+        .trim()
+        .split(/\n\s*\n+/);
+
+
 
     for (const block of blocks) {
 
+
         const lines =
             block
-                .trim()
-                .split(/\r?\n/);
+            .split("\n")
+            .map(x => x.trim());
 
-        if (lines.length < 3)
+
+        if (lines.length < 3) {
             continue;
+        }
 
-        const index =
-            lines[0].trim();
-
-        const time =
-            lines[1].trim();
-
-        const text =
-            lines
-                .slice(2)
-                .join("\n")
-                .trim();
 
         result.push({
 
-            index,
+            index:
+                lines[0],
 
-            time,
+            time:
+                lines[1],
 
-            text
+            text:
+                lines
+                .slice(2)
+                .join("\n")
 
         });
 
+
     }
+
 
     return result;
 
 }
 
-/* ============================================
-   Parse file dịch
 
-   Trả về
 
-   {
-       map,
-       duplicates,
-       invalid
-   }
 
-============================================ */
 
-const original =
-    parseOriginalSRT(
-        document.getElementById("original").value
-    );
+/* =========================================
+   PARSE FILE DỊCH
 
-const originalIndexes =
-    new Set(
-        original.map(
-            item => item.index
-        )
-    );
+   File dịch không cần chuẩn SRT
 
-const translated =
-    parseTranslatedSRT(
-        document.getElementById("translated").value,
-        originalIndexes
-    );
-function parseTranslatedSRT(srt, originalIndexes) {
+========================================= */
 
-    const map = new Map();
-    const duplicates = [];
-    const invalid = [];
+function parseTranslatedSRT(
+    srt,
+    originalIndexes
+) {
 
-    const lines = srt
+
+    const map =
+        new Map();
+
+
+    const duplicates =
+        [];
+
+
+    const invalid =
+        [];
+
+
+
+    const lines =
+        srt
         .replace(/\r/g, "")
         .split("\n")
-        .map(v => v.trim())
-        .filter(v => v !== "");
+        .map(x => x.trim())
+        .filter(x => x);
+
+
 
     let currentIndex = null;
-    let currentText = [];
 
-    for (const line of lines) {
+    let buffer = [];
 
-        // Nếu dòng này là index của file gốc
-        if (originalIndexes.has(line)) {
 
-            // Lưu subtitle trước
-            if (currentIndex !== null) {
 
-                if (map.has(currentIndex)) {
 
-                    duplicates.push({
-                        index: currentIndex,
-                        old: map.get(currentIndex),
-                        current: currentText.join("\n")
-                    });
+    function saveCurrent() {
 
-                } else {
 
-                    map.set(
-                        currentIndex,
-                        currentText.join("\n")
-                    );
+        if (
+            currentIndex === null
+        ) {
+            return;
+        }
 
-                }
+
+
+        const text =
+            buffer
+            .join("\n")
+            .trim();
+
+
+
+        if (
+            map.has(currentIndex)
+        ) {
+
+
+            duplicates.push({
+
+                index:
+                    currentIndex,
+
+                old:
+                    map.get(currentIndex),
+
+                current:
+                    text
+
+            });
+
+
+        }
+        else {
+
+
+            map.set(
+
+                currentIndex,
+
+                text
+
+            );
+
+
+        }
+
+
+    }
+
+
+
+
+
+    for (
+        const line of lines
+    ) {
+
+
+
+        // Chỉ nhận index có trong file gốc
+
+        if (
+            originalIndexes.has(line)
+        ) {
+
+
+            saveCurrent();
+
+
+            currentIndex =
+                line;
+
+
+            buffer = [];
+
+
+        }
+
+        else {
+
+
+            if (
+                currentIndex !== null
+            ) {
+
+                buffer.push(
+                    line
+                );
 
             }
 
-            currentIndex = line;
-            currentText = [];
+            else {
 
-        } else {
+                invalid.push(
+                    line
+                );
 
-            currentText.push(line);
+            }
 
-        }
-
-    }
-
-    // Lưu subtitle cuối
-    if (currentIndex !== null) {
-
-        if (map.has(currentIndex)) {
-
-            duplicates.push({
-                index: currentIndex,
-                old: map.get(currentIndex),
-                current: currentText.join("\n")
-            });
-
-        } else {
-
-            map.set(
-                currentIndex,
-                currentText.join("\n")
-            );
 
         }
 
+
     }
+
+
+
+    saveCurrent();
+
+
 
     return {
+
         map,
+
         duplicates,
+
         invalid
+
     };
 
+
 }
-/* ============================================
-   Tự động xuống dòng
-============================================ */
+
+
+
+
+
+/* =========================================
+   TỰ XUỐNG DÒNG
+========================================= */
 
 function wrapText(
-
     text,
-
     maxLen
-
 ) {
 
-    if (!text)
-        return "";
-
-    text =
-        text.trim();
 
     if (
-
         !maxLen ||
-
         maxLen <= 0
-
     ) {
 
         return text;
 
     }
 
+
+
     const words =
         text.split(/\s+/);
 
-    const output =
-        [];
 
-    let line =
-        "";
 
-    for (const word of words) {
+    const result = [];
+
+    let line = "";
+
+
+
+    for (
+        const word of words
+    ) {
+
 
         if (!line) {
 
@@ -220,73 +287,74 @@ function wrapText(
 
         }
 
+
+
         const test =
-            line +
-            " " +
-            word;
+            line + " " + word;
+
+
 
         if (
-
-            test.length <=
-            maxLen
-
+            test.length <= maxLen
         ) {
 
-            line =
-                test;
+            line = test;
 
         }
-
         else {
 
-            output.push(
+            result.push(
                 line
             );
 
-            line =
-                word;
+            line = word;
 
         }
 
+
     }
+
+
 
     if (line) {
 
-        output.push(
-            line
-        );
+        result.push(line);
 
     }
 
-    return output.join("\n");
+
+
+    return result.join("\n");
 
 }
 
-/* ============================================
-   Time -> ms
-============================================ */
+
+
+
+
+/* =========================================
+   TIME
+========================================= */
 
 function timeToMs(time) {
 
+
     const [
-
         h,
-
         m,
-
         rest
-
     ] =
         time.split(":");
 
+
+
     const [
-
         s,
-
         ms
-
     ] =
         rest.split(",");
+
+
 
     return (
 
@@ -302,368 +370,594 @@ function timeToMs(time) {
 
 }
 
-/* ============================================
-   ms -> Time
-============================================ */
+
+
+
 
 function msToTime(ms) {
+
 
     const h =
         Math.floor(
             ms / 3600000
         );
 
+
     ms %= 3600000;
+
+
 
     const m =
         Math.floor(
             ms / 60000
         );
 
+
     ms %= 60000;
+
+
 
     const s =
         Math.floor(
             ms / 1000
         );
 
+
     ms %= 1000;
+
+
 
     return (
 
-        String(h)
-            .padStart(2, "0")
-
+        String(h).padStart(2,"0")
         + ":"
-
-        + String(m)
-            .padStart(2, "0")
-
+        +
+        String(m).padStart(2,"0")
         + ":"
-
-        + String(s)
-            .padStart(2, "0")
-
+        +
+        String(s).padStart(2,"0")
         + ","
-
-        + String(ms)
-            .padStart(3, "0")
+        +
+        String(ms).padStart(3,"0")
 
     );
 
 }
 
-/* ============================================
-   Fix timestamp trùng nhau
-============================================ */
+
+
+
 
 function fixOverlap(items) {
 
+
     for (
-
         let i = 0;
-
         i < items.length - 1;
-
         i++
-
     ) {
 
+
         const [
-
             ,
-
-            end
-
+            currentEnd
         ] =
             items[i]
-                .time
-                .split(" --> ");
+            .time
+            .split(" --> ");
+
+
 
         const [
-
             nextStart,
-
             nextEnd
-
         ] =
-            items[
-                i + 1
-            ]
-                .time
-                .split(" --> ");
+            items[i+1]
+            .time
+            .split(" --> ");
+
+
 
         if (
-
-            end ===
-            nextStart
-
+            currentEnd === nextStart
         ) {
 
-            const newStart =
 
-                msToTime(
+            items[i+1].time =
 
-                    timeToMs(
-                        nextStart
-                    ) + 1
+            `${msToTime(
+                timeToMs(nextStart)+1
+            )} --> ${nextEnd}`;
 
-                );
-
-            items[
-                i + 1
-            ].time =
-
-`${newStart} --> ${nextEnd}`;
 
         }
 
+
     }
+
+
 
     return items;
 
 }
 
-/* ============================================
-   Reset báo cáo
-============================================ */
+/* =========================================
+   REPORT
+========================================= */
+
 
 function resetReport() {
 
-    document.getElementById(
-        "totalCount"
-    ).textContent = 0;
 
-    document.getElementById(
-        "mergedCount"
-    ).textContent = 0;
+    const ids = [
 
-    document.getElementById(
-        "missingCount"
-    ).textContent = 0;
+        "totalCount",
 
-    document.getElementById(
+        "mergedCount",
+
+        "missingCount",
+
         "extraCount"
-    ).textContent = 0;
 
-    document.getElementById(
-        "missingList"
-    ).value = "";
+    ];
 
-    document.getElementById(
-        "extraList"
-    ).value = "";
+
+    ids.forEach(id => {
+
+        const el =
+            document.getElementById(id);
+
+
+        if (el) {
+
+            el.textContent = "0";
+
+        }
+
+    });
+
+
+    const missing =
+        document.getElementById(
+            "missingList"
+        );
+
+
+    const extra =
+        document.getElementById(
+            "extraList"
+        );
+
+
+    if (missing) {
+
+        missing.value =
+            "";
+
+    }
+
+
+    if (extra) {
+
+        extra.value =
+            "";
+
+    }
 
 }
 
-/* ============================================
-   Hiển thị báo cáo
-============================================ */
+
+
 
 function updateReport(report) {
 
-    document.getElementById(
-        "totalCount"
-    ).textContent =
-        report.total;
 
-    document.getElementById(
-        "mergedCount"
-    ).textContent =
-        report.merged;
+    const total =
+        document.getElementById(
+            "totalCount"
+        );
 
-    document.getElementById(
-        "missingCount"
-    ).textContent =
-        report.missing.length;
 
-    document.getElementById(
-        "extraCount"
-    ).textContent =
-        report.extra.length;
+    const merged =
+        document.getElementById(
+            "mergedCount"
+        );
 
-    document.getElementById(
-        "missingList"
-    ).value =
 
-        report.missing.length
+    const missing =
+        document.getElementById(
+            "missingCount"
+        );
 
-        ? report.missing
+
+    const extra =
+        document.getElementById(
+            "extraCount"
+        );
+
+
+
+    if (total)
+        total.textContent =
+            report.total;
+
+
+    if (merged)
+        merged.textContent =
+            report.merged;
+
+
+    if (missing)
+        missing.textContent =
+            report.missing.length;
+
+
+    if (extra)
+        extra.textContent =
+            report.extra.length;
+
+
+
+
+    const missingList =
+        document.getElementById(
+            "missingList"
+        );
+
+
+    const extraList =
+        document.getElementById(
+            "extraList"
+        );
+
+
+
+    if (missingList) {
+
+
+        missingList.value =
+
+            report.missing.length
+
+            ?
+
+            report.missing
             .map(item =>
 
 `${item.index}
 ${item.time}
-${item.text}`)
+${item.text}`
 
-            .join("\n\n----------------------\n\n")
+            )
+            .join(
 
-        : "Không có.";
+"\n\n----------------------\n\n"
 
-    document.getElementById(
-        "extraList"
-    ).value =
+            )
 
-        report.extra.length
+            :
 
-        ? report.extra
+            "Không có.";
+
+    }
+
+
+
+
+
+    if (extraList) {
+
+
+        extraList.value =
+
+            report.extra.length
+
+            ?
+
+            report.extra
             .map(item =>
 
 `${item.index}
-${item.text}`)
+${item.text}`
 
-            .join("\n\n----------------------\n\n")
+            )
+            .join(
 
-        : "Không có.";
+"\n\n----------------------\n\n"
+
+            )
+
+            :
+
+            "Không có.";
+
+    }
+
 
 }
 
-/* =====================================================
-   merge.js
-   PHẦN 2
-   Merge SRT
-===================================================== */
+
+
+
+
+
+
+/* =========================================
+   MERGE SRT
+========================================= */
+
 
 function merge() {
 
+
     resetReport();
 
-    /* ===========================
-       Đọc dữ liệu
-    =========================== */
+
+
+    /*
+       Đọc file gốc
+    */
+
 
     let original =
         parseOriginalSRT(
+
             document
-                .getElementById("original")
-                .value
+            .getElementById(
+                "original"
+            )
+            .value
+
         );
+
+
+
+    original =
+        fixOverlap(
+            original
+        );
+
+
+
+
+
+    /*
+       Tạo danh sách index gốc
+    */
+
+
+    const originalIndexes =
+        new Set(
+
+            original.map(
+
+                item =>
+                    item.index
+
+            )
+
+        );
+
+
+
+
+
+    /*
+       Đọc file dịch
+    */
+
 
     const translatedData =
         parseTranslatedSRT(
+
             document
-                .getElementById("translated")
-                .value
+            .getElementById(
+                "translated"
+            )
+            .value,
+
+            originalIndexes
+
         );
 
-    original =
-        fixOverlap(original);
+
 
     const translated =
         translatedData.map;
 
-    /* ===========================
-       Tuỳ chọn
-    =========================== */
+
+
+
+
+
+    /*
+       Option
+    */
+
 
     const enableWrap =
         document
-            .getElementById(
-                "enableWrap"
-            )
-            .checked;
+        .getElementById(
+            "enableWrap"
+        )
+        .checked;
+
+
 
     const maxLen =
         enableWrap
-            ? Number(
-                  document
-                      .getElementById(
-                          "maxLen"
-                      )
-                      .value
-              )
-            : 0;
+
+        ?
+
+        Number(
+
+            document
+            .getElementById(
+                "maxLen"
+            )
+            .value
+
+        )
+
+        :
+
+        0;
+
+
+
+
 
     const keepOriginal =
         document
-            .getElementById(
-                "keepOriginal"
-            )
-            .checked;
+        .getElementById(
+            "keepOriginal"
+        )
 
-    /* ===========================
+        ?
+
+        document
+        .getElementById(
+            "keepOriginal"
+        )
+        .checked
+
+        :
+
+        false;
+
+
+
+
+
+
+    /*
        Report
-    =========================== */
+    */
+
 
     const report = {
+
 
         total:
             original.length,
 
-        merged: 0,
 
-        missing: [],
+        merged:
+            0,
 
-        extra: [],
+
+        missing:
+            [],
+
+
+        extra:
+            [],
+
 
         duplicate:
             translatedData.duplicates,
 
+
         invalid:
             translatedData.invalid
 
+
     };
+
+
+
+
 
     const used =
         new Set();
 
+
+
     const output =
         [];
 
-    /* ===========================
-       Merge theo index
-    =========================== */
 
-    for (const item of original) {
+
+
+
+
+
+    /*
+       Ghép theo index
+    */
+
+
+    for (
+        const item of original
+    ) {
+
+
 
         let text =
             translated.get(
                 item.index
             );
 
-        /* Không tìm thấy */
+
+
 
         if (
             text === undefined
         ) {
 
-            report
-                .missing
-                .push({
 
-                    index:
-                        item.index,
 
-                    time:
-                        item.time,
+            report.missing.push({
 
-                    text:
-                        item.text
+                index:
+                    item.index,
 
-                });
+                time:
+                    item.time,
+
+                text:
+                    item.text
+
+            });
+
+
 
             text =
                 keepOriginal
-                    ? item.text
-                    : "";
+                ?
+
+                item.text
+
+                :
+
+                "";
+
+
 
         }
 
         else {
 
-            report
-                .merged++;
+
+
+            report.merged++;
+
 
             used.add(
                 item.index
             );
 
+
         }
 
-        /* Wrap */
+
+
+
 
         if (
             enableWrap
         ) {
+
 
             text =
                 wrapText(
@@ -674,7 +968,13 @@ function merge() {
 
                 );
 
+
         }
+
+
+
+
+
 
         output.push(
 
@@ -684,41 +984,38 @@ ${text}`
 
         );
 
+
     }
 
-    /* ===========================
-       Subtitle dư
-    =========================== */
+
+
+
+
+
+
+    /*
+       Tìm subtitle dư
+    */
+
 
     for (
-
         const [
-
             index,
-
             text
-
         ]
 
         of translated
-
     ) {
 
+
+
         if (
-
-            used.has(
-                index
-            )
-
+            !used.has(index)
         ) {
 
-            continue;
 
-        }
 
-        report
-            .extra
-            .push({
+            report.extra.push({
 
                 index,
 
@@ -726,80 +1023,210 @@ ${text}`
 
             });
 
+
+        }
+
+
     }
 
-    /* ===========================
-       Hiển thị Report
-    =========================== */
+
+
+
+
+
+
+    /*
+       Xuất kết quả
+    */
+
+
+    document
+    .getElementById(
+        "result"
+    )
+    .value =
+
+        output.join(
+
+            "\n\n"
+
+        );
+
+
+
+
 
     updateReport(
         report
     );
 
-    /* ===========================
-       Kết quả
-    =========================== */
 
-    document
-        .getElementById(
-            "result"
-        )
-        .value =
 
-        output.join(
-            "\n\n"
-        );
 
-    /* ===========================
-       Console
-    =========================== */
+
+    /*
+       Console kiểm tra
+    */
+
 
     console.table({
 
-        total:
+        Total:
             report.total,
 
-        merged:
+        Merged:
             report.merged,
 
-        missing:
+        Missing:
             report.missing.length,
 
-        extra:
+        Extra:
             report.extra.length,
 
-        duplicate:
+        Duplicate:
             report.duplicate.length,
 
-        invalid:
+        Invalid:
             report.invalid.length
 
     });
 
+
+
+}
+
+
+
+
+
+
+
+
+
+/* =========================================
+   COPY
+========================================= */
+
+
+function copyResult() {
+
+
+    const result =
+        document
+        .getElementById(
+            "result"
+        );
+
+
+
+    result.select();
+
+
+    document.execCommand(
+        "copy"
+    );
+
+
+    alert(
+        "Đã copy kết quả"
+    );
+
+
+}
+
+
+
+
+
+
+
+
+/* =========================================
+   DOWNLOAD SRT
+========================================= */
+
+
+function downloadSRT() {
+
+
+    const text =
+        document
+        .getElementById(
+            "result"
+        )
+        .value;
+
+
+
     if (
-        report
-            .duplicate
-            .length
+        !text.trim()
     ) {
 
-        console.warn(
-            "Duplicate Index",
-            report.duplicate
+
+        alert(
+            "Chưa có kết quả"
         );
+
+
+        return;
 
     }
 
-    if (
-        report
-            .invalid
-            .length
-    ) {
 
-        console.warn(
-            "Invalid Index",
-            report.invalid
+
+
+
+    const blob =
+        new Blob(
+
+            [
+                text
+            ],
+
+            {
+                type:
+                "text/plain;charset=utf-8"
+            }
+
         );
 
-    }
+
+
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+
+
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+
+    a.href =
+        url;
+
+
+
+    a.download =
+        "merged.srt";
+
+
+
+    a.click();
+
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
 
 }
