@@ -1,224 +1,569 @@
-function parseSRT(srt) {
+/* =====================================================
+   merge.js
+   PHẦN 1
+   Utilities + Parse + Report
+===================================================== */
 
-    return srt
-        .trim()
-        .split(/\n{2,}/)
-        .map(block => {
+/* ============================================
+   Parse SRT gốc
+============================================ */
 
-            const lines =
-                block.trim().split("\n");
+function parseOriginalSRT(srt) {
 
-            return {
-                index: lines[0].trim(),
-                time: lines[1].trim()
-            };
-        });
-}
-
-function getTranslatedTexts(srt) {
-
-    const lines = srt.split("\n");
+    if (!srt.trim()) {
+        return [];
+    }
 
     const result = [];
 
-    let current = [];
+    const blocks =
+        srt
+            .trim()
+            .split(/\r?\n\r?\n+/);
 
-    for (const rawLine of lines) {
+    for (const block of blocks) {
 
-        const line = rawLine.trim();
+        const lines =
+            block
+                .trim()
+                .split(/\r?\n/);
 
-        if (/^\d+$/.test(line)) {
-
-            if (current.length) {
-
-                result.push(
-                    current.join(" ")
-                );
-
-                current = [];
-            }
-
+        if (lines.length < 3)
             continue;
-        }
 
-        if (line.includes("-->")) {
-            continue;
-        }
+        const index =
+            lines[0].trim();
 
-        if (line) {
-            current.push(line);
-        }
-    }
+        const time =
+            lines[1].trim();
 
-    if (current.length) {
+        const text =
+            lines
+                .slice(2)
+                .join("\n")
+                .trim();
 
-        result.push(
-            current.join(" ")
-        );
+        result.push({
+
+            index,
+
+            time,
+
+            text
+
+        });
+
     }
 
     return result;
+
 }
 
-function wrapText(text, maxLen) {
+/* ============================================
+   Parse file dịch
 
-    text = text.trim();
+   Trả về
 
-    if (!maxLen || maxLen <= 0) {
+   {
+       map,
+       duplicates,
+       invalid
+   }
+
+============================================ */
+
+function parseTranslatedSRT(srt) {
+
+    const map =
+        new Map();
+
+    const duplicates =
+        [];
+
+    const invalid =
+        [];
+
+    if (!srt.trim()) {
+
+        return {
+
+            map,
+
+            duplicates,
+
+            invalid
+
+        };
+
+    }
+
+    const blocks =
+        srt
+            .trim()
+            .split(/\r?\n\r?\n+/);
+
+    for (const block of blocks) {
+
+        const lines =
+            block
+                .trim()
+                .split(/\r?\n/);
+
+        if (lines.length < 2)
+            continue;
+
+        const index =
+            lines[0].trim();
+
+        const text =
+            lines
+                .slice(1)
+                .join("\n")
+                .trim();
+
+        /* index không hợp lệ */
+
+        if (!/^\d+$/.test(index)) {
+
+            invalid.push({
+
+                index,
+
+                text
+
+            });
+
+            continue;
+
+        }
+
+        /* index trùng */
+
+        if (map.has(index)) {
+
+            duplicates.push({
+
+                index,
+
+                old:
+
+                    map.get(index),
+
+                current:
+
+                    text
+
+            });
+
+            continue;
+
+        }
+
+        map.set(
+
+            index,
+
+            text
+
+        );
+
+    }
+
+    return {
+
+        map,
+
+        duplicates,
+
+        invalid
+
+    };
+
+}
+
+/* ============================================
+   Tự động xuống dòng
+============================================ */
+
+function wrapText(
+
+    text,
+
+    maxLen
+
+) {
+
+    if (!text)
+        return "";
+
+    text =
+        text.trim();
+
+    if (
+
+        !maxLen ||
+
+        maxLen <= 0
+
+    ) {
+
         return text;
+
     }
 
     const words =
         text.split(/\s+/);
 
-    const lines = [];
+    const output =
+        [];
 
-    let currentLine = "";
+    let line =
+        "";
 
     for (const word of words) {
 
-        if (!currentLine) {
+        if (!line) {
 
-            currentLine = word;
+            line = word;
 
             continue;
+
         }
 
-        const testLine =
-            currentLine + " " + word;
+        const test =
+            line +
+            " " +
+            word;
 
         if (
-            testLine.length <= maxLen
+
+            test.length <=
+            maxLen
+
         ) {
 
-            currentLine = testLine;
+            line =
+                test;
 
-        } else {
+        }
 
-            lines.push(
-                currentLine
+        else {
+
+            output.push(
+                line
             );
 
-            currentLine = word;
+            line =
+                word;
+
         }
+
     }
 
-    if (currentLine) {
+    if (line) {
 
-        lines.push(
-            currentLine
+        output.push(
+            line
         );
+
     }
 
-    return lines.join("\n");
+    return output.join("\n");
+
 }
 
-function timeToMs(timeStr) {
+/* ============================================
+   Time -> ms
+============================================ */
 
-    const [h, m, rest] =
-        timeStr.split(":");
+function timeToMs(time) {
 
-    const [s, ms] =
+    const [
+
+        h,
+
+        m,
+
+        rest
+
+    ] =
+        time.split(":");
+
+    const [
+
+        s,
+
+        ms
+
+    ] =
         rest.split(",");
 
     return (
+
         Number(h) * 3600000 +
+
         Number(m) * 60000 +
+
         Number(s) * 1000 +
+
         Number(ms)
+
     );
+
 }
+
+/* ============================================
+   ms -> Time
+============================================ */
 
 function msToTime(ms) {
 
     const h =
-        Math.floor(ms / 3600000);
+        Math.floor(
+            ms / 3600000
+        );
 
     ms %= 3600000;
 
     const m =
-        Math.floor(ms / 60000);
+        Math.floor(
+            ms / 60000
+        );
 
     ms %= 60000;
 
     const s =
-        Math.floor(ms / 1000);
+        Math.floor(
+            ms / 1000
+        );
 
     ms %= 1000;
 
     return (
-        String(h).padStart(2, "0") +
-        ":" +
-        String(m).padStart(2, "0") +
-        ":" +
-        String(s).padStart(2, "0") +
-        "," +
-        String(ms).padStart(3, "0")
+
+        String(h)
+            .padStart(2, "0")
+
+        + ":"
+
+        + String(m)
+            .padStart(2, "0")
+
+        + ":"
+
+        + String(s)
+            .padStart(2, "0")
+
+        + ","
+
+        + String(ms)
+            .padStart(3, "0")
+
     );
+
 }
+
+/* ============================================
+   Fix timestamp trùng nhau
+============================================ */
 
 function fixOverlap(items) {
 
     for (
+
         let i = 0;
+
         i < items.length - 1;
+
         i++
+
     ) {
 
-        const [, currentEnd] =
-            items[i].time.split(
-                " --> "
-            );
+        const [
+
+            ,
+
+            end
+
+        ] =
+            items[i]
+                .time
+                .split(" --> ");
 
         const [
+
             nextStart,
+
             nextEnd
+
         ] =
-            items[i + 1].time.split(
-                " --> "
-            );
+            items[
+                i + 1
+            ]
+                .time
+                .split(" --> ");
 
         if (
-            currentEnd === nextStart
+
+            end ===
+            nextStart
+
         ) {
 
             const newStart =
+
                 msToTime(
+
                     timeToMs(
                         nextStart
                     ) + 1
+
                 );
 
-            items[i + 1].time =
-                `${newStart} --> ${nextEnd}`;
+            items[
+                i + 1
+            ].time =
+
+`${newStart} --> ${nextEnd}`;
+
         }
+
     }
 
     return items;
+
 }
+
+/* ============================================
+   Reset báo cáo
+============================================ */
+
+function resetReport() {
+
+    document.getElementById(
+        "totalCount"
+    ).textContent = 0;
+
+    document.getElementById(
+        "mergedCount"
+    ).textContent = 0;
+
+    document.getElementById(
+        "missingCount"
+    ).textContent = 0;
+
+    document.getElementById(
+        "extraCount"
+    ).textContent = 0;
+
+    document.getElementById(
+        "missingList"
+    ).value = "";
+
+    document.getElementById(
+        "extraList"
+    ).value = "";
+
+}
+
+/* ============================================
+   Hiển thị báo cáo
+============================================ */
+
+function updateReport(report) {
+
+    document.getElementById(
+        "totalCount"
+    ).textContent =
+        report.total;
+
+    document.getElementById(
+        "mergedCount"
+    ).textContent =
+        report.merged;
+
+    document.getElementById(
+        "missingCount"
+    ).textContent =
+        report.missing.length;
+
+    document.getElementById(
+        "extraCount"
+    ).textContent =
+        report.extra.length;
+
+    document.getElementById(
+        "missingList"
+    ).value =
+
+        report.missing.length
+
+        ? report.missing
+            .map(item =>
+
+`${item.index}
+${item.time}
+${item.text}`)
+
+            .join("\n\n----------------------\n\n")
+
+        : "Không có.";
+
+    document.getElementById(
+        "extraList"
+    ).value =
+
+        report.extra.length
+
+        ? report.extra
+            .map(item =>
+
+`${item.index}
+${item.text}`)
+
+            .join("\n\n----------------------\n\n")
+
+        : "Không có.";
+
+}
+
+/* =====================================================
+   merge.js
+   PHẦN 2
+   Merge SRT
+===================================================== */
 
 function merge() {
 
+    resetReport();
+
+    /* ===========================
+       Đọc dữ liệu
+    =========================== */
+
     let original =
-        parseSRT(
+        parseOriginalSRT(
             document
-                .getElementById(
-                    "original"
-                )
+                .getElementById("original")
                 .value
         );
 
-    const translated =
-        getTranslatedTexts(
+    const translatedData =
+        parseTranslatedSRT(
             document
-                .getElementById(
-                    "translated"
-                )
+                .getElementById("translated")
                 .value
         );
 
     original =
         fixOverlap(original);
+
+    const translated =
+        translatedData.map;
+
+    /* ===========================
+       Tuỳ chọn
+    =========================== */
 
     const enableWrap =
         document
@@ -238,25 +583,233 @@ function merge() {
               )
             : 0;
 
-    const result =
-        original
-            .map((item, i) => {
+    const keepOriginal =
+        document
+            .getElementById(
+                "keepOriginal"
+            )
+            .checked;
 
-                const text =
-                    wrapText(
-                        translated[i] || "",
-                        maxLen
-                    );
+    /* ===========================
+       Report
+    =========================== */
 
-                return `${item.index}
+    const report = {
+
+        total:
+            original.length,
+
+        merged: 0,
+
+        missing: [],
+
+        extra: [],
+
+        duplicate:
+            translatedData.duplicates,
+
+        invalid:
+            translatedData.invalid
+
+    };
+
+    const used =
+        new Set();
+
+    const output =
+        [];
+
+    /* ===========================
+       Merge theo index
+    =========================== */
+
+    for (const item of original) {
+
+        let text =
+            translated.get(
+                item.index
+            );
+
+        /* Không tìm thấy */
+
+        if (
+            text === undefined
+        ) {
+
+            report
+                .missing
+                .push({
+
+                    index:
+                        item.index,
+
+                    time:
+                        item.time,
+
+                    text:
+                        item.text
+
+                });
+
+            text =
+                keepOriginal
+                    ? item.text
+                    : "";
+
+        }
+
+        else {
+
+            report
+                .merged++;
+
+            used.add(
+                item.index
+            );
+
+        }
+
+        /* Wrap */
+
+        if (
+            enableWrap
+        ) {
+
+            text =
+                wrapText(
+
+                    text,
+
+                    maxLen
+
+                );
+
+        }
+
+        output.push(
+
+`${item.index}
 ${item.time}
-${text}`;
-            })
-            .join("\n\n");
+${text}`
+
+        );
+
+    }
+
+    /* ===========================
+       Subtitle dư
+    =========================== */
+
+    for (
+
+        const [
+
+            index,
+
+            text
+
+        ]
+
+        of translated
+
+    ) {
+
+        if (
+
+            used.has(
+                index
+            )
+
+        ) {
+
+            continue;
+
+        }
+
+        report
+            .extra
+            .push({
+
+                index,
+
+                text
+
+            });
+
+    }
+
+    /* ===========================
+       Hiển thị Report
+    =========================== */
+
+    updateReport(
+        report
+    );
+
+    /* ===========================
+       Kết quả
+    =========================== */
 
     document
         .getElementById(
             "result"
         )
-        .value = result;
+        .value =
+
+        output.join(
+            "\n\n"
+        );
+
+    /* ===========================
+       Console
+    =========================== */
+
+    console.table({
+
+        total:
+            report.total,
+
+        merged:
+            report.merged,
+
+        missing:
+            report.missing.length,
+
+        extra:
+            report.extra.length,
+
+        duplicate:
+            report.duplicate.length,
+
+        invalid:
+            report.invalid.length
+
+    });
+
+    if (
+        report
+            .duplicate
+            .length
+    ) {
+
+        console.warn(
+            "Duplicate Index",
+            report.duplicate
+        );
+
+    }
+
+    if (
+        report
+            .invalid
+            .length
+    ) {
+
+        console.warn(
+            "Invalid Index",
+            report.invalid
+        );
+
+    }
+
 }
