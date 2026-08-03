@@ -89,88 +89,85 @@ const translated =
         document.getElementById("translated").value,
         originalIndexes
     );
-function parseTranslatedSRT(
-    srt,
-    originalIndexes
-){
+function parseTranslatedSRT(srt, originalIndexes) {
 
     const map = new Map();
     const duplicates = [];
     const invalid = [];
 
-    if (!srt.trim()) {
+    const lines = srt
+        .replace(/\r/g, "")
+        .split("\n")
+        .map(v => v.trim())
+        .filter(v => v !== "");
 
-        return {
-            map,
-            duplicates,
-            invalid
-        };
+    let currentIndex = null;
+    let currentText = [];
+
+    for (const line of lines) {
+
+        // Nếu dòng này là index của file gốc
+        if (originalIndexes.has(line)) {
+
+            // Lưu subtitle trước
+            if (currentIndex !== null) {
+
+                if (map.has(currentIndex)) {
+
+                    duplicates.push({
+                        index: currentIndex,
+                        old: map.get(currentIndex),
+                        current: currentText.join("\n")
+                    });
+
+                } else {
+
+                    map.set(
+                        currentIndex,
+                        currentText.join("\n")
+                    );
+
+                }
+
+            }
+
+            currentIndex = line;
+            currentText = [];
+
+        } else {
+
+            currentText.push(line);
+
+        }
 
     }
 
-    const blocks =
-        srt
-            .replace(/\r/g, "")
-            .trim()
-            .split(/\n{2,}/);
+    // Lưu subtitle cuối
+    if (currentIndex !== null) {
 
-    for (const block of blocks) {
-
-        const lines =
-            block
-                .split("\n")
-                .map(v => v.trim())
-                .filter(v => v !== "");
-
-        if (lines.length < 2)
-            continue;
-
-        const index =
-            lines[0];
-
-        const text =
-            lines
-                .slice(1)
-                .join("\n");
-
-        if (!/^\d+$/.test(index)) {
-
-            invalid.push({
-                index,
-                text
-            });
-
-            continue;
-
-        }
-
-        if (map.has(index)) {
+        if (map.has(currentIndex)) {
 
             duplicates.push({
-                index,
-                old: map.get(index),
-                current: text
+                index: currentIndex,
+                old: map.get(currentIndex),
+                current: currentText.join("\n")
             });
 
-            continue;
+        } else {
+
+            map.set(
+                currentIndex,
+                currentText.join("\n")
+            );
 
         }
-
-        map.set(
-            index,
-            text
-        );
 
     }
 
     return {
-
         map,
-
         duplicates,
-
         invalid
-
     };
 
 }
