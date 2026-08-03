@@ -8,6 +8,70 @@
    Parse SRT gốc
 ============================================ */
 
+function parseOriginalSRT(srt) {
+
+    if (!srt.trim()) {
+        return [];
+    }
+
+    const result = [];
+
+    const blocks =
+        srt
+            .trim()
+            .split(/\r?\n\r?\n+/);
+
+    for (const block of blocks) {
+
+        const lines =
+            block
+                .trim()
+                .split(/\r?\n/);
+
+        if (lines.length < 3)
+            continue;
+
+        const index =
+            lines[0].trim();
+
+        const time =
+            lines[1].trim();
+
+        const text =
+            lines
+                .slice(2)
+                .join("\n")
+                .trim();
+
+        result.push({
+
+            index,
+
+            time,
+
+            text
+
+        });
+
+    }
+
+    return result;
+
+}
+
+/* ============================================
+   Parse file dịch
+
+   Trả về
+
+   {
+       map,
+       duplicates,
+       invalid
+   }
+
+============================================ */
+
 function parseTranslatedSRT(srt) {
 
     const map = new Map();
@@ -90,129 +154,6 @@ function parseTranslatedSRT(srt) {
     };
 
 }
-
-/* ============================================
-   Parse file dịch
-
-   Trả về
-
-   {
-       map,
-       duplicates,
-       invalid
-   }
-
-============================================ */
-
-function parseTranslatedSRT(srt) {
-
-    const map =
-        new Map();
-
-    const duplicates =
-        [];
-
-    const invalid =
-        [];
-
-    if (!srt.trim()) {
-
-        return {
-
-            map,
-
-            duplicates,
-
-            invalid
-
-        };
-
-    }
-
-    const blocks =
-        srt
-            .trim()
-            .split(/\r?\n\r?\n+/);
-
-    for (const block of blocks) {
-
-        const lines =
-            block
-                .trim()
-                .split(/\r?\n/);
-
-        if (lines.length < 2)
-            continue;
-
-        const index =
-            lines[0].trim();
-
-        const text =
-            lines
-                .slice(1)
-                .join("\n")
-                .trim();
-
-        /* index không hợp lệ */
-
-        if (!/^\d+$/.test(index)) {
-
-            invalid.push({
-
-                index,
-
-                text
-
-            });
-
-            continue;
-
-        }
-
-        /* index trùng */
-
-        if (map.has(index)) {
-
-            duplicates.push({
-
-                index,
-
-                old:
-
-                    map.get(index),
-
-                current:
-
-                    text
-
-            });
-
-            continue;
-
-        }
-
-        map.set(
-
-            index,
-
-            text
-
-        );
-
-    }
-
-    return {
-
-        map,
-
-        duplicates,
-
-        invalid
-
-    };
-
-}
-
 /* ============================================
    Tự động xuống dòng
 ============================================ */
