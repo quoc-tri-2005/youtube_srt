@@ -71,8 +71,13 @@ function parseOriginalSRT(srt) {
    }
 
 ============================================ */
-
-function parseTranslatedSRT(srt) {
+const originalIndexes = new Set(
+    original.map(item => item.index)
+);
+parseTranslatedSRT(
+    srt,
+    originalIndexes
+){
 
     const map = new Map();
     const duplicates = [];
