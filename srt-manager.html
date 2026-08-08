@@ -1,0 +1,1173 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SRT File Manager</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background: #f4f6f9;
+            color: #212529;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+            height: 70px;
+            background: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 28px;
+
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #0d6efd;
+            color: white;
+
+            border-radius: 10px;
+
+            font-size: 18px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn {
+            height: 40px;
+            padding: 0 18px;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+            font-weight: 600;
+
+            transition: 0.2s;
+        }
+
+        .btn-download {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #0b5ed7;
+        }
+
+        .btn-clear {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-clear:hover {
+            background: #dee2e6;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .container {
+            max-width: 1500px;
+            margin: auto;
+
+            padding: 28px;
+        }
+
+        .description {
+            margin-bottom: 22px;
+        }
+
+        .description h1 {
+            margin: 0 0 6px;
+
+            font-size: 24px;
+        }
+
+        .description p {
+            margin: 0;
+
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        /* =========================
+           EDITORS
+        ========================= */
+
+        .editors {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .editor {
+            background: #ffffff;
+
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .editor-header {
+            height: 58px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 16px;
+
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .editor-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            font-weight: 700;
+        }
+
+        .language {
+            width: 32px;
+            height: 32px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 7px;
+
+            background: #f1f3f5;
+
+            font-size: 16px;
+        }
+
+        .file-name {
+            color: #6c757d;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-file {
+            height: 34px;
+
+            padding: 0 12px;
+
+            border-radius: 7px;
+
+            background: #f1f3f5;
+            color: #495057;
+
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-file:hover {
+            background: #e9ecef;
+        }
+
+        textarea {
+            display: block;
+
+            width: 100%;
+            height: 650px;
+
+            resize: vertical;
+
+            border: 0;
+            outline: 0;
+
+            padding: 18px;
+
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+
+            color: #212529;
+            background: #ffffff;
+        }
+
+        textarea::placeholder {
+            color: #adb5bd;
+        }
+
+        .editor-footer {
+            height: 40px;
+
+            padding: 0 16px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            border-top: 1px solid #dee2e6;
+
+            color: #868e96;
+            font-size: 12px;
+        }
+
+        /* =========================
+           MODAL
+        ========================= */
+
+        .modal-overlay {
+            position: fixed;
+
+            inset: 0;
+
+            background: rgba(0, 0, 0, 0.45);
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            width: 440px;
+            max-width: calc(100% - 30px);
+
+            background: white;
+
+            border-radius: 14px;
+
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 18px 20px;
+
+            border-bottom: 1px solid #dee2e6;
+
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-body label {
+            display: block;
+
+            margin-bottom: 8px;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            color: #495057;
+        }
+
+        .modal-body input {
+            width: 100%;
+            height: 44px;
+
+            padding: 0 13px;
+
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+
+            outline: none;
+
+            font-size: 14px;
+        }
+
+        .modal-body input:focus {
+            border-color: #86b7fe;
+
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+        }
+
+        .preview {
+            margin-top: 14px;
+
+            padding: 12px;
+
+            background: #f8f9fa;
+
+            border-radius: 8px;
+
+            font-family: Consolas, monospace;
+            font-size: 12px;
+
+            line-height: 1.7;
+
+            color: #495057;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+
+            border-top: 1px solid #dee2e6;
+        }
+
+        .btn-cancel {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-confirm {
+            background: #0d6efd;
+            color: white;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 900px) {
+
+            .editors {
+                grid-template-columns: 1fr;
+            }
+
+            textarea {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .header {
+                padding: 0 15px;
+            }
+
+            .logo span {
+                display: none;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .description h1 {
+                font-size: 20px;
+            }
+
+            .editor-header {
+                padding: 0 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<header class="header">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            S
+        </div>
+
+        <span>
+            SRT File Manager
+        </span>
+
+    </div>
+
+    <div class="header-actions">
+
+        <button
+            class="btn btn-clear"
+            onclick="clearAll()"
+        >
+            Xóa
+        </button>
+
+        <button
+            class="btn btn-download"
+            onclick="openDownloadModal()"
+        >
+            Tải xuống
+        </button>
+
+    </div>
+
+</header>
+
+
+<!-- =========================
+     MAIN
+========================= -->
+
+<main class="container">
+
+    <div class="description">
+
+        <h1>
+            Quản lý phụ đề
+        </h1>
+
+        <p>
+            Nhập hoặc tải lên hai file phụ đề tiếng Trung và tiếng Việt.
+        </p>
+
+    </div>
+
+
+    <div class="editors">
+
+
+        <!-- =====================
+             ZH
+        ====================== -->
+
+        <section class="editor">
+
+            <div class="editor-header">
+
+                <div class="editor-title">
+
+                    <div class="language">
+                        🇨🇳
+                    </div>
+
+                    <div>
+
+                        <div>
+                            Tiếng Trung
+                        </div>
+
+                        <div
+                            class="file-name"
+                            id="zhFileName"
+                        >
+                            Chưa chọn file
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div>
+
+                    <input
+                        type="file"
+                        id="zhFile"
+                        class="file-input"
+                        accept=".srt"
+                        onchange="loadFile('zh')"
+                    >
+
+                    <button
+                        class="btn-file"
+                        onclick="document.getElementById('zhFile').click()"
+                    >
+                        Chọn .srt
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <textarea
+                id="zhText"
+                placeholder="Dán nội dung zh.srt vào đây..."
+            ></textarea>
+
+
+            <div class="editor-footer">
+
+                <span id="zhCount">
+                    0 ký tự
+                </span>
+
+                <span>
+                    .zh.srt
+                </span>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================
+             VI
+        ====================== -->
+
+        <section class="editor">
+
+            <div class="editor-header">
+
+                <div class="editor-title">
+
+                    <div class="language">
+                        🇻🇳
+                    </div>
+
+                    <div>
+
+                        <div>
+                            Tiếng Việt
+                        </div>
+
+                        <div
+                            class="file-name"
+                            id="viFileName"
+                        >
+                            Chưa chọn file
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div>
+
+                    <input
+                        type="file"
+                        id="viFile"
+                        class="file-input"
+                        accept=".srt"
+                        onchange="loadFile('vi')"
+                    >
+
+                    <button
+                        class="btn-file"
+                        onclick="document.getElementById('viFile').click()"
+                    >
+                        Chọn .srt
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <textarea
+                id="viText"
+                placeholder="Dán nội dung vi.srt vào đây..."
+            ></textarea>
+
+
+            <div class="editor-footer">
+
+                <span id="viCount">
+                    0 ký tự
+                </span>
+
+                <span>
+                    .vi.srt
+                </span>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+
+<!-- =========================
+     DOWNLOAD MODAL
+========================= -->
+
+<div
+    class="modal-overlay"
+    id="downloadModal"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            Đặt tên file tải xuống
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <label for="suffixInput">
+                Phần tên muốn thêm
+            </label>
+
+            <input
+                type="text"
+                id="suffixInput"
+                placeholder="Ví dụ: tap01, ep01, p01..."
+                autocomplete="off"
+            >
+
+
+            <div class="preview">
+
+                <div id="previewZh">
+                    movie.tap01.zh.srt
+                </div>
+
+                <div id="previewVi">
+                    movie.tap01.vi.srt
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                class="btn btn-cancel"
+                onclick="closeDownloadModal()"
+            >
+                Hủy
+            </button>
+
+            <button
+                class="btn btn-confirm"
+                onclick="downloadFiles()"
+            >
+                Tải 2 file
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+    /*
+    ==========================================
+    FILE INFORMATION
+    ==========================================
+    */
+
+    let zhOriginalName = "";
+    let viOriginalName = "";
+
+
+    /*
+    ==========================================
+    LOAD FILE
+    ==========================================
+    */
+
+    function loadFile(type) {
+
+        const input =
+            document.getElementById(type + "File");
+
+        const file = input.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+
+            document.getElementById(type + "Text").value =
+                event.target.result;
+
+            document.getElementById(type + "FileName").textContent =
+                file.name;
+
+
+            if (type === "zh") {
+
+                zhOriginalName = file.name;
+
+            } else {
+
+                viOriginalName = file.name;
+
+            }
+
+
+            updateCount(type);
+
+        };
+
+        /*
+         * UTF-8 được ưu tiên cho subtitle
+         */
+        reader.readAsText(file, "UTF-8");
+    }
+
+
+
+    /*
+    ==========================================
+    CHARACTER COUNT
+    ==========================================
+    */
+
+    document.getElementById("zhText")
+        .addEventListener("input", function () {
+
+            updateCount("zh");
+
+        });
+
+
+    document.getElementById("viText")
+        .addEventListener("input", function () {
+
+            updateCount("vi");
+
+        });
+
+
+    function updateCount(type) {
+
+        const textarea =
+            document.getElementById(type + "Text");
+
+        const counter =
+            document.getElementById(type + "Count");
+
+        counter.textContent =
+            textarea.value.length.toLocaleString("vi-VN")
+            + " ký tự";
+    }
+
+
+
+    /*
+    ==========================================
+    CLEAR
+    ==========================================
+    */
+
+    function clearAll() {
+
+        if (!confirm("Bạn có chắc muốn xóa cả hai nội dung?")) {
+            return;
+        }
+
+
+        document.getElementById("zhText").value = "";
+        document.getElementById("viText").value = "";
+
+
+        document.getElementById("zhFile").value = "";
+        document.getElementById("viFile").value = "";
+
+
+        document.getElementById("zhFileName").textContent =
+            "Chưa chọn file";
+
+        document.getElementById("viFileName").textContent =
+            "Chưa chọn file";
+
+
+        zhOriginalName = "";
+        viOriginalName = "";
+
+
+        updateCount("zh");
+        updateCount("vi");
+    }
+
+
+
+    /*
+    ==========================================
+    DOWNLOAD MODAL
+    ==========================================
+    */
+
+    function getCurrentDate() {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    return `${year}${month}${day}`;
+}
+
+function openDownloadModal() {
+
+    const zh = document.getElementById("zhText").value;
+    const vi = document.getElementById("viText").value;
+
+    if (!zh && !vi) {
+        alert("Vui lòng nhập hoặc chọn file SRT trước.");
+        return;
+    }
+
+    document
+        .getElementById("downloadModal")
+        .classList.add("show");
+
+    // Mặc định: 20260808
+    document.getElementById("suffixInput").value = getCurrentDate();
+
+    updatePreview();
+
+    setTimeout(function () {
+        document.getElementById("suffixInput").focus();
+    }, 100);
+}
+
+
+
+    function closeDownloadModal() {
+
+        document
+            .getElementById("downloadModal")
+            .classList.remove("show");
+    }
+
+
+
+    /*
+    ==========================================
+    PREVIEW
+    ==========================================
+    */
+
+    document
+        .getElementById("suffixInput")
+        .addEventListener("input", updatePreview);
+
+
+    function getBaseName(filename) {
+
+        if (!filename) {
+            return "subtitle";
+        }
+
+
+        /*
+         * Xóa .srt
+         */
+        let name = filename.replace(/\.srt$/i, "");
+
+
+        /*
+         * Nếu file ban đầu là:
+         *
+         * movie.zh.srt
+         *
+         * thì lấy:
+         *
+         * movie
+         */
+
+        name = name.replace(/\.(zh|vi)$/i, "");
+
+
+        return name;
+    }
+
+
+
+    function updatePreview() {
+
+        let suffix =
+            document.getElementById("suffixInput").value.trim();
+
+
+        /*
+         * Loại bỏ ký tự không cần thiết
+         */
+        suffix = suffix.replace(/\.(zh|vi)\.srt$/i, "");
+        suffix = suffix.replace(/\.srt$/i, "");
+
+
+        const zhBase =
+            getBaseName(zhOriginalName || "subtitle.zh.srt");
+
+
+        const viBase =
+            getBaseName(viOriginalName || "subtitle.vi.srt");
+
+
+        let zhName;
+        let viName;
+
+
+        if (suffix) {
+
+            zhName =
+                zhBase + "." + suffix + ".zh.srt";
+
+            viName =
+                viBase + "." + suffix + ".vi.srt";
+
+        } else {
+
+            zhName =
+                zhBase + ".zh.srt";
+
+            viName =
+                viBase + ".vi.srt";
+        }
+
+
+        document.getElementById("previewZh").textContent =
+            zhName;
+
+        document.getElementById("previewVi").textContent =
+            viName;
+    }
+
+
+
+    /*
+    ==========================================
+    DOWNLOAD
+    ==========================================
+    */
+
+    function downloadFiles() {
+
+        const zhText =
+            document.getElementById("zhText").value;
+
+        const viText =
+            document.getElementById("viText").value;
+
+
+        if (!zhText && !viText) {
+
+            alert("Không có nội dung để tải xuống.");
+
+            return;
+        }
+
+
+        let suffix =
+            document
+                .getElementById("suffixInput")
+                .value
+                .trim();
+
+
+        /*
+         * Chỉ cho phép tên file an toàn
+         */
+        suffix = suffix
+            .replace(/[<>:"/\\|?*]/g, "")
+            .replace(/\s+/g, "_");
+
+
+        if (!suffix) {
+
+            alert("Vui lòng nhập phần tên file.");
+
+            return;
+        }
+
+
+        const zhBase =
+            getBaseName(zhOriginalName || "subtitle.zh.srt");
+
+
+        const viBase =
+            getBaseName(viOriginalName || "subtitle.vi.srt");
+
+
+        const zhFilename =
+            zhBase + "." + suffix + ".zh.srt";
+
+
+        const viFilename =
+            viBase + "." + suffix + ".vi.srt";
+
+
+        /*
+         * Tải file ZH
+         */
+
+        if (zhText) {
+
+            downloadTextFile(
+                zhText,
+                zhFilename
+            );
+
+        }
+
+
+        /*
+         * Tải file VI
+         */
+
+        if (viText) {
+
+            setTimeout(function () {
+
+                downloadTextFile(
+                    viText,
+                    viFilename
+                );
+
+            }, 300);
+
+        }
+
+
+        closeDownloadModal();
+    }
+
+
+
+    /*
+    ==========================================
+    CREATE DOWNLOAD FILE
+    ==========================================
+    */
+
+    function downloadTextFile(text, filename) {
+
+        const blob =
+            new Blob(
+                [text],
+                {
+                    type: "text/plain;charset=utf-8"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(blob);
+
+
+        const a =
+            document.createElement("a");
+
+
+        a.href = url;
+
+        a.download = filename;
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        document.body.removeChild(a);
+
+
+        setTimeout(function () {
+
+            URL.revokeObjectURL(url);
+
+        }, 1000);
+    }
+
+
+
+    /*
+    ==========================================
+    ESC CLOSE MODAL
+    ==========================================
+    */
+
+    document.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape") {
+
+            closeDownloadModal();
+
+        }
+
+    });
+
+
+
+    /*
+    ==========================================
+    CLICK OUTSIDE MODAL
+    ==========================================
+    */
+
+    document
+        .getElementById("downloadModal")
+        .addEventListener("click", function (event) {
+
+            if (event.target === this) {
+
+                closeDownloadModal();
+
+            }
+
+        });
+
+</script>
+
+</body>
+</html>
+
