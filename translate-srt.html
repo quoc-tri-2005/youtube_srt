@@ -1,44 +1,154 @@
+
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Tạo Prompt Dịch</title>
-  <link rel="stylesheet" href="translate.css">
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Tạo Prompt Dịch</title>
+
+    <link rel="stylesheet" href="translate.css">
+
 </head>
+
 
 <body>
 
-<!-- 🔙 quay về -->
-<a href="index.html" class="back-btn">⬅ Quay về</a>
 
-<h1>Tạo prompt dịch phụ đề</h1>
+<!-- 🔙 QUAY VỀ -->
 
-<p id="info">Chưa có dữ liệu</p>
+<a href="index.html" class="back-btn">
+    ⬅ Quay về
+</a>
 
-<textarea id="input" placeholder="Dán SRT gốc..."></textarea>
+
+<!-- TIÊU ĐỀ -->
+
+<h1>
+    Tạo prompt dịch phụ đề
+</h1>
+
+
+<!-- THÔNG TIN -->
+
+<p id="info">
+    Chưa có dữ liệu
+</p>
+
+
+<!-- SRT GỐC -->
+
+<textarea
+    id="input"
+    placeholder="Dán SRT gốc..."
+></textarea>
+
+
+<!-- NÚT -->
 
 <div class="actions">
-  <button onclick="generate()">Tạo prompt</button>
-  <button onclick="copyResult()">Copy</button>
+
+    <button onclick="generate()">
+        Tạo prompt
+    </button>
+
+    <button onclick="copyResult()">
+        Copy tất cả
+    </button>
+
 </div>
+
+
+<!-- DANH SÁCH PROMPT -->
 
 <div id="output"></div>
 
+
+<!-- JAVASCRIPT -->
+
 <script src="translate.js"></script>
 
+
 <script>
-// 🔥 copy nhanh
-function copyResult() {
-  const output = document.getElementById("output");
-  output.select();
-  document.execCommand("copy");
+
+// ============================================================
+// COPY TẤT CẢ PROMPT
+// ============================================================
+
+async function copyResult() {
+
+    const textareas =
+        document.querySelectorAll("#output textarea");
+
+    if (!textareas.length) {
+
+        alert("Chưa có prompt để copy!");
+
+        return;
+    }
+
+
+    // Lấy toàn bộ prompt
+    const allText =
+        Array.from(textareas)
+            .map(textarea => textarea.value)
+            .join("\n\n\n");
+
+
+    try {
+
+        // Copy UTF-8 tiếng Việt
+        await navigator.clipboard.writeText(allText);
+
+
+        alert(
+            `✅ Đã copy ${textareas.length} prompt!`
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        // Fallback cho trình duyệt không hỗ trợ clipboard
+        const temp =
+            document.createElement("textarea");
+
+        temp.value = allText;
+
+        document.body.appendChild(temp);
+
+        temp.select();
+
+        document.execCommand("copy");
+
+        temp.remove();
+
+
+        alert(
+            `✅ Đã copy ${textareas.length} prompt!`
+        );
+    }
 }
 
-// 🔥 hiển thị số lượng prompt
+
+// ============================================================
+// HIỂN THỊ SỐ LƯỢNG PROMPT
+// ============================================================
+
 function updateInfo(count) {
-  document.getElementById("info").innerText = `Đã tạo ${count} prompt`;
+
+    document.getElementById("info").innerText =
+        `Đã tạo ${count} prompt`;
 }
+
 </script>
 
+
 </body>
+
 </html>
