@@ -1,9 +1,9 @@
-
 // ============================================================
 // PARSE SRT
 // ============================================================
 
 function parseSRT(srt) {
+
     if (!srt || !srt.trim()) {
         return [];
     }
@@ -14,6 +14,7 @@ function parseSRT(srt) {
         .trim()
         .split(/\n\s*\n/)
         .map(block => {
+
             const lines = block
                 .split("\n")
                 .map(line => line.trim());
@@ -27,6 +28,7 @@ function parseSRT(srt) {
                     .replace(/\s+/g, " ")
                     .trim()
             };
+
         })
         .filter(item => item.index);
 }
@@ -37,6 +39,7 @@ function parseSRT(srt) {
 // ============================================================
 
 function chunk(arr, size = 100) {
+
     const result = [];
 
     for (let i = 0; i < arr.length; i += size) {
@@ -53,6 +56,7 @@ function chunk(arr, size = 100) {
 // ============================================================
 
 function escapeHTML(text) {
+
     return text
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -176,29 +180,97 @@ function openChatGPT(promptText) {
 
     try {
 
+        // ----------------------------------------------------
+        // Lưu lại cửa sổ/tab hiện tại
+        // ----------------------------------------------------
+
+        const currentWindow = window;
+
+        // ----------------------------------------------------
         // Chuẩn hóa Unicode tiếng Việt
-        const normalizedPrompt = promptText.normalize("NFC");
+        // ----------------------------------------------------
 
+        const normalizedPrompt =
+            promptText.normalize("NFC");
+
+        // ----------------------------------------------------
         // Mã hóa UTF-8 an toàn cho URL
-        const encodedPrompt = encodeURIComponent(normalizedPrompt);
+        // ----------------------------------------------------
 
+        const encodedPrompt =
+            encodeURIComponent(normalizedPrompt);
+
+        // ----------------------------------------------------
         // Tạo URL ChatGPT
+        // ----------------------------------------------------
+
         const chatGPTUrl =
             `https://chatgpt.com/?prompt=${encodedPrompt}`;
 
-        // Mở tab mới
-        const newTab = window.open(chatGPTUrl, "_blank");
+        // ----------------------------------------------------
+        // Mở tab ChatGPT mới
+        // ----------------------------------------------------
 
+        const newTab =
+            window.open(
+                chatGPTUrl,
+                "_blank",
+                "noopener,noreferrer"
+            );
+
+        // ----------------------------------------------------
         // Nếu trình duyệt chặn popup
+        // ----------------------------------------------------
+
         if (!newTab) {
-            throw new Error("Popup bị trình duyệt chặn");
+            throw new Error(
+                "Popup bị trình duyệt chặn"
+            );
         }
+
+        // ----------------------------------------------------
+        // Cố gắng giữ tab hiện tại
+        // ----------------------------------------------------
+
+        try {
+            newTab.blur();
+        } catch (e) {
+            console.warn(
+                "Không thể blur tab ChatGPT",
+                e
+            );
+        }
+
+        try {
+            currentWindow.focus();
+        } catch (e) {
+            console.warn(
+                "Không thể focus tab hiện tại",
+                e
+            );
+        }
+
+        // Thử thêm một lần sau khi tab mới được tạo
+        setTimeout(() => {
+
+            try {
+                newTab.blur();
+            } catch (e) {}
+
+            try {
+                currentWindow.focus();
+            } catch (e) {}
+
+        }, 100);
 
         return true;
 
     } catch (error) {
 
-        console.error("Lỗi mở ChatGPT:", error);
+        console.error(
+            "Lỗi mở ChatGPT:",
+            error
+        );
 
         return false;
     }
@@ -211,22 +283,36 @@ function openChatGPT(promptText) {
 
 function generate() {
 
-    const input = document.getElementById("input").value;
+    const input =
+        document.getElementById("input").value;
+
+    // --------------------------------------------------------
+    // Kiểm tra input
+    // --------------------------------------------------------
 
     if (!input.trim()) {
 
         document.getElementById("info").innerText =
             "⚠️ Chưa có SRT";
 
-        document.getElementById("output").innerHTML = "";
+        document.getElementById("output").innerHTML =
+            "";
 
         return;
     }
 
 
+    // --------------------------------------------------------
     // Parse SRT
-    const data = parseSRT(input);
+    // --------------------------------------------------------
 
+    const data =
+        parseSRT(input);
+
+
+    // --------------------------------------------------------
+    // Kiểm tra SRT
+    // --------------------------------------------------------
 
     if (data.length === 0) {
 
@@ -237,14 +323,23 @@ function generate() {
     }
 
 
+    // --------------------------------------------------------
     // Chia thành từng chunk 100 subtitle
-    const chunks = chunk(data, 100);
+    // --------------------------------------------------------
+
+    const chunks =
+        chunk(data, 100);
 
 
+    // --------------------------------------------------------
     // Container
-    const container = document.getElementById("output");
+    // --------------------------------------------------------
 
-    container.innerHTML = "";
+    const container =
+        document.getElementById("output");
+
+    container.innerHTML =
+        "";
 
 
     // ========================================================
@@ -253,28 +348,46 @@ function generate() {
 
     chunks.forEach((c, i) => {
 
-        const start = c[0]?.index || "";
-        const end = c[c.length - 1]?.index || "";
+        const start =
+            c[0]?.index || "";
+
+        const end =
+            c[c.length - 1]?.index || "";
 
 
+        // ----------------------------------------------------
         // Nội dung gửi AI
-        const content = c
-            .map(item => {
-                return `${item.index}
+        // ----------------------------------------------------
+
+        const content =
+            c
+                .map(item => {
+
+                    return `${item.index}
 ${item.time}
 ${item.text}`;
-            })
-            .join("\n");
+
+                })
+                .join("\n");
 
 
+        // ----------------------------------------------------
         // Tạo prompt
-        const prompt = buildPrompt(content);
+        // ----------------------------------------------------
+
+        const prompt =
+            buildPrompt(content);
 
 
+        // ----------------------------------------------------
         // Tạo box
-        const div = document.createElement("div");
+        // ----------------------------------------------------
 
-        div.className = "prompt-box";
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "prompt-box";
 
 
         // ====================================================
@@ -282,6 +395,7 @@ ${item.text}`;
         // ====================================================
 
         div.innerHTML = `
+
             <div class="prompt-actions">
 
                 <b>
@@ -291,14 +405,22 @@ ${item.text}`;
 
                 <div>
 
+                    <!-- CHỈ COPY -->
+                    <button class="copy-only-btn">
+                        📋 Copy
+                    </button>
+
+                    <!-- COPY + CHATGPT -->
                     <button class="copy-btn">
                         🚀 ChatGPT
                     </button>
 
+                    <!-- OK -->
                     <button class="ok-btn">
                         ✅ OK
                     </button>
 
+                    <!-- LỖI -->
                     <button class="fail-btn">
                         ❌ Lỗi
                     </button>
@@ -310,12 +432,16 @@ ${item.text}`;
             </div>
 
             <textarea readonly>${escapeHTML(prompt)}</textarea>
+
         `;
 
 
         // ====================================================
         // LẤY ELEMENT
         // ====================================================
+
+        const btnCopyOnly =
+            div.querySelector(".copy-only-btn");
 
         const btnCopy =
             div.querySelector(".copy-btn");
@@ -334,101 +460,168 @@ ${item.text}`;
 
 
         // ====================================================
+        // COPY CHỈ COPY
+        // ====================================================
+
+        btnCopyOnly.onclick =
+            async () => {
+
+                try {
+
+                    const promptText =
+                        textarea.value;
+
+
+                    // ----------------------------------------
+                    // COPY
+                    // ----------------------------------------
+
+                    await navigator.clipboard.writeText(
+                        promptText
+                    );
+
+
+                    // ----------------------------------------
+                    // THÔNG BÁO
+                    // ----------------------------------------
+
+                    status.textContent =
+                        "📋 Đã copy";
+
+                    status.style.color =
+                        "green";
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Copy lỗi:",
+                        error
+                    );
+
+                    status.textContent =
+                        "❌ Copy lỗi";
+
+                    status.style.color =
+                        "red";
+                }
+            };
+
+
+        // ====================================================
         // COPY + CHATGPT
         // ====================================================
 
-        btnCopy.onclick = async () => {
+        btnCopy.onclick =
+            async () => {
 
-            try {
+                try {
 
-                const promptText =
-                    textarea.value;
-
-
-                // --------------------------------------------
-                // COPY
-                // --------------------------------------------
-
-                await navigator.clipboard.writeText(
-                    promptText
-                );
+                    const promptText =
+                        textarea.value;
 
 
-                // --------------------------------------------
-                // MỞ CHATGPT
-                // --------------------------------------------
+                    // ----------------------------------------
+                    // COPY
+                    // ----------------------------------------
 
-                const opened =
-                    openChatGPT(promptText);
+                    await navigator.clipboard.writeText(
+                        promptText
+                    );
 
 
-                if (opened) {
+                    // ----------------------------------------
+                    // MỞ CHATGPT
+                    // ----------------------------------------
+
+                    const opened =
+                        openChatGPT(promptText);
+
+
+                    // ----------------------------------------
+                    // THÔNG BÁO
+                    // ----------------------------------------
+
+                    if (opened) {
+
+                        status.textContent =
+                            "📋 Đã copy + 🚀 mở ChatGPT";
+
+                        status.style.color =
+                            "blue";
+
+                    } else {
+
+                        status.textContent =
+                            "📋 Đã copy nhưng không mở được ChatGPT";
+
+                        status.style.color =
+                            "orange";
+                    }
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Lỗi:",
+                        error
+                    );
 
                     status.textContent =
-                        "📋 Đã copy + 🚀 mở ChatGPT";
+                        "❌ Copy lỗi";
 
                     status.style.color =
-                        "blue";
-
-                } else {
-
-                    status.textContent =
-                        "📋 Đã copy nhưng không mở được ChatGPT";
-
-                    status.style.color =
-                        "orange";
+                        "red";
                 }
-
-
-            } catch (error) {
-
-                console.error(error);
-
-                status.textContent =
-                    "❌ Copy lỗi";
-
-                status.style.color =
-                    "red";
-            }
-        };
+            };
 
 
         // ====================================================
         // OK
         // ====================================================
 
-        btnOK.onclick = () => {
+        btnOK.onclick =
+            () => {
 
-            status.textContent =
-                "✅ Dịch OK";
+                status.textContent =
+                    "✅ Dịch OK";
 
-            status.style.color =
-                "green";
+                status.style.color =
+                    "green";
 
 
-            btnOK.classList.add("active");
+                btnOK.classList.add(
+                    "active"
+                );
 
-            btnFail.classList.remove("active");
-        };
+                btnFail.classList.remove(
+                    "active"
+                );
+            };
 
 
         // ====================================================
         // FAIL
         // ====================================================
 
-        btnFail.onclick = () => {
+        btnFail.onclick =
+            () => {
 
-            status.textContent =
-                "❌ Dịch lỗi";
+                status.textContent =
+                    "❌ Dịch lỗi";
 
-            status.style.color =
-                "red";
+                status.style.color =
+                    "red";
 
 
-            btnFail.classList.add("active");
+                btnFail.classList.add(
+                    "active"
+                );
 
-            btnOK.classList.remove("active");
-        };
+                btnOK.classList.remove(
+                    "active"
+                );
+            };
 
 
         // ====================================================
@@ -444,5 +637,7 @@ ${item.text}`;
     // CẬP NHẬT THÔNG TIN
     // ========================================================
 
-    updateInfo(chunks.length);
+    updateInfo(
+        chunks.length
+    );
 }
