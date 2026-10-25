@@ -24,16 +24,13 @@
         ========================= */
 
         .header {
-            height: 70px;
+            min-height: 70px;
             background: #ffffff;
             border-bottom: 1px solid #dee2e6;
-
             display: flex;
             align-items: center;
-            justify-content: space-between;
-
-            padding: 0 28px;
-
+            gap: 24px;
+            padding: 12px 28px;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -43,31 +40,62 @@
             display: flex;
             align-items: center;
             gap: 12px;
-
             font-size: 20px;
             font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .logo-icon {
             width: 38px;
             height: 38px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: #0d6efd;
             color: white;
-
             border-radius: 10px;
-
             font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .filename-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .filename-control label {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .filename-control input {
+            width: 100%;
+            max-width: 360px;
+            min-width: 80px;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            outline: none;
+            font: inherit;
+            font-size: 14px;
+        }
+
+        .filename-control input:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
         }
 
         .header-actions {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         button {
@@ -79,13 +107,11 @@
         .btn {
             height: 40px;
             padding: 0 18px;
-
             border-radius: 8px;
-
             font-size: 14px;
             font-weight: 600;
-
             transition: 0.2s;
+            white-space: nowrap;
         }
 
         .btn-download {
@@ -259,123 +285,6 @@
         }
 
         /* =========================
-           MODAL
-        ========================= */
-
-        .modal-overlay {
-            position: fixed;
-
-            inset: 0;
-
-            background: rgba(0, 0, 0, 0.45);
-
-            display: none;
-
-            align-items: center;
-            justify-content: center;
-
-            z-index: 1000;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal {
-            width: 440px;
-            max-width: calc(100% - 30px);
-
-            background: white;
-
-            border-radius: 14px;
-
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-
-            overflow: hidden;
-        }
-
-        .modal-header {
-            padding: 18px 20px;
-
-            border-bottom: 1px solid #dee2e6;
-
-            font-size: 17px;
-            font-weight: 700;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-body label {
-            display: block;
-
-            margin-bottom: 8px;
-
-            font-size: 13px;
-            font-weight: 600;
-
-            color: #495057;
-        }
-
-        .modal-body input {
-            width: 100%;
-            height: 44px;
-
-            padding: 0 13px;
-
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-
-            outline: none;
-
-            font-size: 14px;
-        }
-
-        .modal-body input:focus {
-            border-color: #86b7fe;
-
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
-        }
-
-        .preview {
-            margin-top: 14px;
-
-            padding: 12px;
-
-            background: #f8f9fa;
-
-            border-radius: 8px;
-
-            font-family: Consolas, monospace;
-            font-size: 12px;
-
-            line-height: 1.7;
-
-            color: #495057;
-        }
-
-        .modal-footer {
-            padding: 14px 20px;
-
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-
-            border-top: 1px solid #dee2e6;
-        }
-
-        .btn-cancel {
-            background: #e9ecef;
-            color: #495057;
-        }
-
-        .btn-confirm {
-            background: #0d6efd;
-            color: white;
-        }
-
-        /* =========================
            RESPONSIVE
         ========================= */
 
@@ -390,14 +299,39 @@
             }
         }
 
-        @media (max-width: 600px) {
-
+        @media (max-width: 900px) {
             .header {
-                padding: 0 15px;
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 12px 18px;
+            }
+
+            .filename-control {
+                order: 3;
+                flex-basis: 100%;
+            }
+
+            .filename-control input {
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 12px 15px;
             }
 
             .logo span {
-                display: none;
+                display: inline;
+                font-size: 17px;
+            }
+
+            .header-actions {
+                margin-left: auto;
+            }
+
+            .btn {
+                padding: 0 12px;
             }
 
             .container {
@@ -422,37 +356,25 @@
 ========================= -->
 
 <header class="header">
-
     <div class="logo">
+        <div class="logo-icon">S</div>
+        <span>SRT File Manager</span>
+    </div>
 
-        <div class="logo-icon">
-            S
-        </div>
-
-        <span>
-            SRT File Manager
-        </span>
-
+    <div class="filename-control">
+        <label for="suffixInput">Tên file</label>
+        <input
+            type="text"
+            id="suffixInput"
+            placeholder="Ví dụ: 20261025"
+            autocomplete="off"
+        >
     </div>
 
     <div class="header-actions">
-
-        <button
-            class="btn btn-clear"
-            onclick="clearAll()"
-        >
-            Xóa
-        </button>
-
-        <button
-            class="btn btn-download"
-            onclick="openDownloadModal()"
-        >
-            Tải xuống
-        </button>
-
+        <button class="btn btn-clear" onclick="clearAll()">Xóa</button>
+        <button class="btn btn-download" onclick="downloadFiles()">Tải xuống</button>
     </div>
-
 </header>
 
 
@@ -632,77 +554,6 @@
 
 
 
-<!-- =========================
-     DOWNLOAD MODAL
-========================= -->
-
-<div
-    class="modal-overlay"
-    id="downloadModal"
->
-
-    <div class="modal">
-
-        <div class="modal-header">
-
-            Đặt tên file tải xuống
-
-        </div>
-
-
-        <div class="modal-body">
-
-            <label for="suffixInput">
-                Phần tên muốn thêm
-            </label>
-
-            <input
-                type="text"
-                id="suffixInput"
-                placeholder="Ví dụ: tap01, ep01, p01..."
-                autocomplete="off"
-            >
-
-
-            <div class="preview">
-
-                <div id="previewZh">
-                    movie.tap01.zh.srt
-                </div>
-
-                <div id="previewVi">
-                    movie.tap01.vi.srt
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="modal-footer">
-
-            <button
-                class="btn btn-cancel"
-                onclick="closeDownloadModal()"
-            >
-                Hủy
-            </button>
-
-            <button
-                class="btn btn-confirm"
-                onclick="downloadFiles()"
-            >
-                Tải 2 file
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
 <script>
 
     /*
@@ -870,64 +721,19 @@ viEditor.addEventListener("contextmenu", function (event) {
 
     /*
     ==========================================
-    DOWNLOAD MODAL
+    TÊN FILE MẶC ĐỊNH
     ==========================================
     */
 
     function getCurrentDate() {
-    const now = new Date();
-
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-
-    return `${year}${month}${day}`;
-}
-
-function openDownloadModal() {
-
-    const zh = document.getElementById("zhText").value;
-    const vi = document.getElementById("viText").value;
-
-    if (!zh && !vi) {
-        alert("Vui lòng nhập hoặc chọn file SRT trước.");
-        return;
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        return `${year}${month}${day}`;
     }
 
-    document
-        .getElementById("downloadModal")
-        .classList.add("show");
-
-    // Mặc định: 20260808
     document.getElementById("suffixInput").value = getCurrentDate();
-
-    updatePreview();
-
-    setTimeout(function () {
-        document.getElementById("suffixInput").focus();
-    }, 100);
-}
-
-
-
-    function closeDownloadModal() {
-
-        document
-            .getElementById("downloadModal")
-            .classList.remove("show");
-    }
-
-
-
-    /*
-    ==========================================
-    PREVIEW
-    ==========================================
-    */
-
-    document
-        .getElementById("suffixInput")
-        .addEventListener("input", updatePreview);
 
 
     function getBaseName(filename) {
@@ -957,58 +763,6 @@ function openDownloadModal() {
 
 
         return name;
-    }
-
-
-
-    function updatePreview() {
-
-        let suffix =
-            document.getElementById("suffixInput").value.trim();
-
-
-        /*
-         * Loại bỏ ký tự không cần thiết
-         */
-        suffix = suffix.replace(/\.(zh|vi)\.srt$/i, "");
-        suffix = suffix.replace(/\.srt$/i, "");
-
-
-        const zhBase =
-            getBaseName(zhOriginalName || "subtitle.zh.srt");
-
-
-        const viBase =
-            getBaseName(viOriginalName || "subtitle.vi.srt");
-
-
-        let zhName;
-        let viName;
-
-
-        if (suffix) {
-
-            zhName =
-                zhBase + "." + suffix + ".zh.srt";
-
-            viName =
-                viBase + "." + suffix + ".vi.srt";
-
-        } else {
-
-            zhName =
-                zhBase + ".zh.srt";
-
-            viName =
-                viBase + ".vi.srt";
-        }
-
-
-        document.getElementById("previewZh").textContent =
-            zhName;
-
-        document.getElementById("previewVi").textContent =
-            viName;
     }
 
 
@@ -1106,8 +860,6 @@ function openDownloadModal() {
 
         }
 
-
-        closeDownloadModal();
     }
 
 
@@ -1156,42 +908,6 @@ function openDownloadModal() {
     }
 
 
-
-    /*
-    ==========================================
-    ESC CLOSE MODAL
-    ==========================================
-    */
-
-    document.addEventListener("keydown", function (event) {
-
-        if (event.key === "Escape") {
-
-            closeDownloadModal();
-
-        }
-
-    });
-
-
-
-    /*
-    ==========================================
-    CLICK OUTSIDE MODAL
-    ==========================================
-    */
-
-    document
-        .getElementById("downloadModal")
-        .addEventListener("click", function (event) {
-
-            if (event.target === this) {
-
-                closeDownloadModal();
-
-            }
-
-        });
 
 </script>
 
