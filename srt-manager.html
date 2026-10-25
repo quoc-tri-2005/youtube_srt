@@ -788,6 +788,33 @@
         });
 
 
+    // Chuột phải trong ô File đã dịch sẽ chèn một dòng mới thật
+const viEditor = document.getElementById("viText");
+
+let savedStart = 0;
+let savedEnd = 0;
+
+// Ghi nhớ vị trí con trỏ khi người dùng thao tác trong ô
+["click", "keyup", "select", "input"].forEach(type => {
+    viEditor.addEventListener(type, function () {
+        savedStart = this.selectionStart;
+        savedEnd = this.selectionEnd;
+    });
+});
+
+viEditor.addEventListener("contextmenu", function (event) {
+    event.preventDefault();
+
+    this.setRangeText("\n", savedStart, savedEnd, "end");
+
+    savedStart = this.selectionStart;
+    savedEnd = this.selectionEnd;
+
+    this.focus();
+    this.dispatchEvent(new Event("input", { bubbles: true }));
+});
+
+
     function updateCount(type) {
 
         const textarea =
@@ -1170,4 +1197,3 @@ function openDownloadModal() {
 
 </body>
 </html>
-
