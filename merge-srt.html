@@ -251,6 +251,65 @@
 
     </div>
 
+    <!-- Chuột phải chèn xuống dòng tại vị trí con trỏ văn bản đã ghi nhớ -->
+    <script>
+        (function () {
+            const editors = [
+                document.getElementById("original"),
+                document.getElementById("translated")
+            ];
+
+            const savedPositions = new WeakMap();
+
+            editors.forEach(function (editor) {
+                if (!editor) return;
+
+                function savePosition() {
+                    savedPositions.set(editor, {
+                        start: editor.selectionStart,
+                        end: editor.selectionEnd
+                    });
+                }
+
+                // Ghi nhớ vị trí khi người dùng đặt con trỏ, chọn chữ hoặc sửa văn bản.
+                ["click", "keyup", "select", "input", "focus"].forEach(function (type) {
+                    editor.addEventListener(type, savePosition);
+                });
+
+                // Lưu vị trí ban đầu khi trang được khởi tạo.
+                savePosition();
+
+                editor.addEventListener("contextmenu", function (event) {
+                    event.preventDefault();
+
+                    const position = savedPositions.get(editor) || {
+                        start: editor.selectionStart,
+                        end: editor.selectionEnd
+                    };
+
+                    const start = Math.max(0, Math.min(position.start, editor.value.length));
+                    const end = Math.max(start, Math.min(position.end, editor.value.length));
+
+                    // Chèn ký tự xuống dòng thật tại vạch con trỏ đã ghi nhớ.
+                    editor.setRangeText("\n", start, end, "start");
+
+                    // Đặt vạch nhấp nháy ngay sau ký tự xuống dòng vừa chèn.
+                    const newPosition = start + 1;
+                    editor.focus();
+                    editor.setSelectionRange(newPosition, newPosition);
+
+                    savedPositions.set(editor, {
+                        start: newPosition,
+                        end: newPosition
+                    });
+
+                    // Phát sự kiện input để các hàm đang theo dõi nội dung được cập nhật.
+                    editor.dispatchEvent(new Event("input", { bubbles: true }));
+                });
+            });
+        })();
+    </script>
+
     <script src="merge.js"></script>
 
 </body>
